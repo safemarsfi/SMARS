@@ -900,15 +900,15 @@ contract SafeMars is Context, IERC20, Ownable {
 
     mapping(address => bool) private _isExcluded;
     address[] private _excluded;
-
+    //
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 1000000000 * 10**6 * 10**9;
+    uint256 private constant _tTotal = 1000000000 * 10**6 * 10**9;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "SafeMars";
-    string private _symbol = "SMARS";
-    uint8 private _decimals = 9;
+    string private constant _name = "SafeMars";
+    string private constant _symbol = "SMARS";
+    uint8 private constant _decimals = 9;
 
     uint256 public _taxFee = 5;
     uint256 private _previousTaxFee = _taxFee;
@@ -923,14 +923,15 @@ contract SafeMars is Context, IERC20, Ownable {
     bool public swapAndLiquifyEnabled = true;
 
     uint256 public _maxTxAmount = 5000000 * 10**6 * 10**9;
-    uint256 private numTokensSellToAddToLiquidity = 500000 * 10**6 * 10**9;
+    uint256 private constant numTokensSellToAddToLiquidity =
+        500000 * 10**6 * 10**9;
 
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
     event SwapAndLiquify(
         uint256 tokensSwapped,
         uint256 ethReceived,
-        uint256 tokensIntoLiqudity
+        uint256 tokensIntoLiquidity
     );
 
     modifier lockTheSwap {
@@ -1102,7 +1103,7 @@ contract SafeMars is Context, IERC20, Ownable {
 
     function excludeFromReward(address account) public onlyOwner() {
         // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Uniswap router.');
-        require(!_isExcluded[account], "Account is already excluded");
+        require(!_isExcluded[account], "Account is not excluded");
         if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
         }
@@ -1111,7 +1112,7 @@ contract SafeMars is Context, IERC20, Ownable {
     }
 
     function includeInReward(address account) external onlyOwner() {
-        require(_isExcluded[account], "Account is already excluded");
+        require(_isExcluded[account], "Account is not excluded");
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
                 _excluded[i] = _excluded[_excluded.length - 1];
@@ -1411,7 +1412,7 @@ contract SafeMars is Context, IERC20, Ownable {
             tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
-            owner(),
+            address(this),
             block.timestamp
         );
     }
@@ -1429,8 +1430,6 @@ contract SafeMars is Context, IERC20, Ownable {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferStandard(sender, recipient, amount);
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
